@@ -1,31 +1,37 @@
 package com.example.cinema.mapper;
 
-import com.example.cinema.dto.ActorDto;
+import com.example.cinema.dto.actor.ActorRequest;
+import com.example.cinema.dto.actor.ActorResponse;
+import com.example.cinema.dto.actor.ActorSummary;
+import com.example.cinema.dto.movie.MovieSummary;
 import com.example.cinema.model.Actor;
 import com.example.cinema.model.Movie;
-import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
-
 import java.util.List;
+import org.mapstruct.IterableMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 
 @Component
 @Mapper(componentModel = "spring")
 public interface ActorMapper {
 
-  ActorMapper INSTANCE = Mappers.getMapper(ActorMapper.class);
+  @Mapping(target = "movieSummaries", source = "movies")
+  ActorResponse toActorResponse(Actor actor);
 
-  @Mapping(target = "movieIds", source = "movies")
-  ActorDto toDto(Actor actor);
+  @Mapping(target = "movies", ignore = true)
+  Actor toEntity(ActorRequest dto);
 
-  @Mapping(target = "movies", source = "movieIds")
-  Actor toEntity(ActorDto dto);
-
-  default List<String> mapMoviesToIds(List<Movie> movies) {
-    return movies.stream().map(Movie::getId).toList();
+  @Named("toMovieSummary")
+  default MovieSummary toMovieSummary(Movie movie) {
+    return new MovieSummary(movie.getId(), movie.getName());
   }
 
-  default List<Movie> mapIdsToMovies(List<String> ids) {
-    return null;
+  @IterableMapping(qualifiedByName = "toMovieSummary")
+  List<MovieSummary> toMovieSummaries(List<Movie> movies);
+
+  default ActorSummary toActorSummary(Actor actor) {
+    return new ActorSummary(actor.getId(), actor.getDescription());
   }
 }
