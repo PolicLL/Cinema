@@ -1,5 +1,6 @@
 package com.example.cinema.controller;
 
+import com.example.cinema.dto.movie.MovieFilter;
 import com.example.cinema.dto.movie.MovieRequest;
 import com.example.cinema.dto.movie.MovieResponse;
 import com.example.cinema.service.MovieService;
@@ -13,7 +14,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/movie")
@@ -25,11 +34,16 @@ public class MovieController {
   private final MovieService movieService;
 
   @GetMapping
-  @Operation(summary = "Get all movies", description = "Returns a list of all movies")
+  @Operation(summary = "Get all movies",
+      description = "Returns a list of all movies, optionally filtered by id and/or name.")
   @ApiResponse(responseCode = "200", description = "List of movies returned successfully")
-  public ResponseEntity<List<MovieResponse>> getAll() {
+  public ResponseEntity<List<MovieResponse>> getAll(
+      @RequestParam(required = false) String id,
+      @RequestParam(required = false) String name
+  ) {
     log.info("Fetching all movies");
-    return ResponseEntity.ok(movieService.findAll());
+    MovieFilter filter = new MovieFilter(id, name);
+    return ResponseEntity.ok(movieService.findAll(filter));
   }
 
   @GetMapping("/{id}")

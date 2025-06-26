@@ -1,5 +1,8 @@
 package com.example.cinema.service;
 
+import static com.example.cinema.utils.SpecificationUtils.safeAnd;
+
+import com.example.cinema.dto.movie.MovieFilter;
 import com.example.cinema.dto.movie.MovieRequest;
 import com.example.cinema.dto.movie.MovieResponse;
 import com.example.cinema.exception.MovieNotFoundException;
@@ -8,11 +11,13 @@ import com.example.cinema.mapper.MovieMapper;
 import com.example.cinema.model.Movie;
 import com.example.cinema.repository.ActorRepository;
 import com.example.cinema.repository.MovieRepository;
+import com.example.cinema.specification.MovieSpecification;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,11 +29,17 @@ public class MovieService {
   private final ActorRepository actorRepository;
   private final MovieMapper movieMapper;
 
-  public List<MovieResponse> findAll() {
+  public List<MovieResponse> findAll(MovieFilter filter) {
     log.info("Fetching all movies");
-    List<MovieResponse> movies = movieRepository.findAll().stream()
+
+    Specification<Movie> spec = null;
+    spec = safeAnd(spec, MovieSpecification.hasId(filter.id()));
+    spec = safeAnd(spec, MovieSpecification.hasName(filter.name()));
+
+    List<MovieResponse> movies = movieRepository.findAll(spec).stream()
         .map(movieMapper::toMovieResponse)
         .toList();
+
     log.info("Found {} movies", movies.size());
     return movies;
   }
