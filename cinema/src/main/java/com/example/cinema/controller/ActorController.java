@@ -1,5 +1,6 @@
 package com.example.cinema.controller;
 
+import com.example.cinema.dto.actor.ActorFilter;
 import com.example.cinema.dto.actor.ActorRequest;
 import com.example.cinema.dto.actor.ActorResponse;
 import com.example.cinema.service.ActorService;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -32,11 +34,18 @@ public class ActorController {
   private final ActorService actorService;
 
   @GetMapping
-  @Operation(summary = "Get all actors", description = "Returns a list of all actors")
+  @Operation(
+      summary = "Get all actors",
+      description = "Returns a list of all actors, optionally filtered by id and/or description"
+  )
   @ApiResponse(responseCode = "200", description = "List of actors returned successfully")
-  public ResponseEntity<List<ActorResponse>> getAll() {
-    log.info("Fetching all actors");
-    return ResponseEntity.ok(actorService.findAll());
+  public ResponseEntity<List<ActorResponse>> getAll(
+      @RequestParam(required = false) String id,
+      @RequestParam(required = false) String description
+  ) {
+    log.info("Fetching actors with filters: id={}, description={}", id, description);
+    ActorFilter filter = new ActorFilter(id, description);
+    return ResponseEntity.ok(actorService.findAll(filter));
   }
 
   @GetMapping("/{id}")

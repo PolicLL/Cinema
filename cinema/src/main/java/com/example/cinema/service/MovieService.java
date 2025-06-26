@@ -58,7 +58,8 @@ public class MovieService {
 
   public MovieResponse update(String id, MovieRequest dto) {
     log.info("Updating movie with id: {} with data: {}", id, dto);
-    Movie existing = movieRepository.findById(id).orElseThrow();
+    Movie existing = movieRepository.findById(id)
+        .orElseThrow(() -> new MovieNotFoundException(id));
     existing.setName(dto.name());
     existing.setActors(actorRepository.findAllById(dto.actorIds()));
     Movie updatedMovie = movieRepository.save(existing);
@@ -68,6 +69,9 @@ public class MovieService {
 
   public void delete(String id) {
     log.info("Deleting movie with id: {}", id);
+    if (movieRepository.existsById(id))
+      throw new MovieNotFoundException(id);
+
     movieRepository.deleteById(id);
     log.info("Deleted movie with id: {}", id);
   }

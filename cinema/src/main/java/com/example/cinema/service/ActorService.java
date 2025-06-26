@@ -1,5 +1,8 @@
 package com.example.cinema.service;
 
+import static com.example.cinema.utils.SpecificationUtils.safeAnd;
+
+import com.example.cinema.dto.actor.ActorFilter;
 import com.example.cinema.dto.actor.ActorRequest;
 import com.example.cinema.dto.actor.ActorResponse;
 import com.example.cinema.exception.ActorNotFoundException;
@@ -8,11 +11,13 @@ import com.example.cinema.model.Actor;
 import com.example.cinema.model.Movie;
 import com.example.cinema.repository.ActorRepository;
 import com.example.cinema.repository.MovieRepository;
+import com.example.cinema.specification.ActorSpecification;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,11 +29,17 @@ public class ActorService {
   private final MovieRepository movieRepository;
   private final ActorMapper actorMapper;
 
-  public List<ActorResponse> findAll() {
-    log.info("Fetching all actors");
-    List<ActorResponse> actors = actorRepository.findAll().stream()
+  public List<ActorResponse> findAll(ActorFilter filter) {
+    log.info("Fetching actors with filters: {}", filter);
+
+    Specification<Actor> spec = null;
+    spec = safeAnd(spec, ActorSpecification.hasId(filter.id()));
+    spec = safeAnd(spec, ActorSpecification.hasDescription(filter.description()));
+
+    List<ActorResponse> actors = actorRepository.findAll(spec).stream()
         .map(actorMapper::toActorResponse)
         .toList();
+
     log.info("Found {} actors", actors.size());
     return actors;
   }
@@ -63,7 +74,8 @@ public class ActorService {
 
   public ActorResponse update(String id, ActorRequest dto) {
     log.info("Updating actor with id: {} with data: {}", id, dto);
-    Actor existing = actorRepository.findById(id).orElseThrow();
+    Actor existing = actorRepository.findById(id)
+        .orElseThrow(() -> new ActorNotFoundException(id));
     existing.setDescription(dto.description());
     existing.setMovies(movieRepository.findAllById(dto.movieIds()));
     Actor updatedActor = actorRepository.save(existing);
@@ -73,6 +85,9 @@ public class ActorService {
 
   public void delete(String id) {
     log.info("Deleting actor with id: {}", id);
+    if (actorRepository.existsById(id))
+      throw new ActorNotFoundException(id);
+
     actorRepository.deleteById(id);
     log.info("Deleted actor with id: {}", id);
   }
