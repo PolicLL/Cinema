@@ -1,6 +1,9 @@
 package com.example.cinema.controller;
 
 import com.example.cinema.dto.ErrorResponse;
+import com.example.cinema.exception.ActorNotFoundException;
+import com.example.cinema.exception.MovieNotFoundException;
+import com.example.cinema.exception.MovieWithNameExistsException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -21,7 +24,6 @@ public class GlobalExceptionHandler {
         .map(ObjectError::getDefaultMessage)
         .collect(Collectors.joining("; "));
 
-
     return new ErrorResponse(
         LocalDateTime.now(),
         HttpStatus.BAD_REQUEST.value(),
@@ -29,5 +31,38 @@ public class GlobalExceptionHandler {
         message,
         request.getRequestURI()
     );
+  }
+
+  @ExceptionHandler(MovieWithNameExistsException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ErrorResponse handleMovieWithNameExistsException(MovieWithNameExistsException ex, HttpServletRequest request) {
+    return ErrorResponse.builder()
+        .timestamp(LocalDateTime.now())
+        .status(HttpStatus.BAD_REQUEST.value())
+        .message(ex.getMessage())
+        .path(request.getRequestURI())
+        .build();
+  }
+
+  @ExceptionHandler(ActorNotFoundException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ErrorResponse handleActorNotFoundException(ActorNotFoundException ex, HttpServletRequest request) {
+    return ErrorResponse.builder()
+        .timestamp(LocalDateTime.now())
+        .status(HttpStatus.BAD_REQUEST.value())
+        .message(ex.getMessage())
+        .path(request.getRequestURI())
+        .build();
+  }
+
+  @ExceptionHandler(MovieNotFoundException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ErrorResponse handleMovieNotFoundException(MovieNotFoundException ex, HttpServletRequest request) {
+    return ErrorResponse.builder()
+        .timestamp(LocalDateTime.now())
+        .status(HttpStatus.BAD_REQUEST.value())
+        .message(ex.getMessage())
+        .path(request.getRequestURI())
+        .build();
   }
 }

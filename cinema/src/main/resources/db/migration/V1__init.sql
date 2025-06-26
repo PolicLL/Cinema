@@ -5,7 +5,7 @@ CREATE TABLE actor (
 
 CREATE TABLE movie (
     id VARCHAR(255) PRIMARY KEY,
-    name VARCHAR(255)
+    name VARCHAR(255) UNIQUE
 );
 
 CREATE TABLE movie_actor (

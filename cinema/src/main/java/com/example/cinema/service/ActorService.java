@@ -2,11 +2,14 @@ package com.example.cinema.service;
 
 import com.example.cinema.dto.actor.ActorRequest;
 import com.example.cinema.dto.actor.ActorResponse;
+import com.example.cinema.exception.ActorNotFoundException;
 import com.example.cinema.mapper.ActorMapper;
 import com.example.cinema.model.Actor;
+import com.example.cinema.model.Movie;
 import com.example.cinema.repository.ActorRepository;
 import com.example.cinema.repository.MovieRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +35,9 @@ public class ActorService {
 
   public ActorResponse findById(String id) {
     log.info("Fetching actor with id: {}", id);
-    ActorResponse response = actorMapper.toActorResponse(actorRepository.findById(id).orElseThrow());
+    Optional<Actor> actor = actorRepository.findById(id);
+    ActorResponse response = actorMapper.toActorResponse(actor
+        .orElseThrow(() -> new ActorNotFoundException(id)));
     log.info("Found actor: {}", response);
     return response;
   }
@@ -40,9 +45,18 @@ public class ActorService {
   public ActorResponse save(ActorRequest dto) {
     log.info("Saving new actor with data: {}", dto);
     Actor actor = actorMapper.toEntity(dto);
-    actor.setMovies(movieRepository.findAllById(dto.movieIds()));
     actor.setId(UUID.randomUUID().toString());
-    Actor savedActor = actorRepository.save(actor);
+
+    Actor savedActor = actorRepository.save(actor); // Save first
+
+    List<Movie> movies = movieRepository.findAllById(dto.movieIds());
+    savedActor.setMovies(movies);
+
+    for (Movie movie : movies) {
+      movie.getActors().add(savedActor);
+      movieRepository.save(movie);
+    }
+
     log.info("Saved actor with id: {}", savedActor.getId());
     return actorMapper.toActorResponse(savedActor);
   }

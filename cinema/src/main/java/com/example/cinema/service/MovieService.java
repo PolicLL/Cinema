@@ -2,11 +2,14 @@ package com.example.cinema.service;
 
 import com.example.cinema.dto.movie.MovieRequest;
 import com.example.cinema.dto.movie.MovieResponse;
+import com.example.cinema.exception.MovieNotFoundException;
+import com.example.cinema.exception.MovieWithNameExistsException;
 import com.example.cinema.mapper.MovieMapper;
 import com.example.cinema.model.Movie;
 import com.example.cinema.repository.ActorRepository;
 import com.example.cinema.repository.MovieRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,13 +35,19 @@ public class MovieService {
 
   public MovieResponse findById(String id) {
     log.info("Fetching movie with id: {}", id);
-    MovieResponse response = movieMapper.toMovieResponse(movieRepository.findById(id).orElseThrow());
+    Optional<Movie> movie = movieRepository.findById(id);
+    MovieResponse response = movieMapper.toMovieResponse(movie
+        .orElseThrow(() -> new MovieNotFoundException(id)));
     log.info("Found movie: {}", response);
     return response;
   }
 
   public MovieResponse save(MovieRequest dto) {
     log.info("Saving new movie with data: {}", dto);
+
+    if (movieRepository.existsByName(dto.name()))
+      throw new MovieWithNameExistsException(dto.name());
+
     Movie movie = movieMapper.toEntity(dto);
     movie.setActors(actorRepository.findAllById(dto.actorIds()));
     movie.setId(UUID.randomUUID().toString());
