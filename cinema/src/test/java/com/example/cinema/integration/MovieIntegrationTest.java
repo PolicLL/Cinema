@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.cinema.dto.movie.MovieRequest;
@@ -93,6 +94,42 @@ class MovieIntegrationTest {
     assertThat(updated.name()).isEqualTo("New Title");
     assertThat(updated.actorSummaries()).isEmpty();
   }
+  @Test
+  void shouldFailToCreateMovieWhenNameAlreadyExists() throws Exception {
+    MovieRequest createRequest = new MovieRequest("Duplicate Test", List.of());
+
+    String request = objectMapper.writeValueAsString(createRequest);
+
+    mockMvc.perform(post("/movie")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(request))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+
+    mockMvc.perform(post("/movie")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(request))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Movie with name Duplicate Test already exists."))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.path").value("/movie"));
+  }
+
+  @Test
+  void shouldFailToCreateMovieWhenNameIsBlank() throws Exception {
+    MovieRequest createRequest = new MovieRequest("", List.of());
+
+    String request = objectMapper.writeValueAsString(createRequest);
+
+    mockMvc.perform(post("/movie")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(request))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Movie has to have a name."))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.path").value("/movie"));
+  }
+
 
   @Test
   void deleteMovieSuccess() throws Exception {
@@ -112,6 +149,17 @@ class MovieIntegrationTest {
 
     mockMvc.perform(get("/movie/" + created.id()))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldFailToDeleteMovieWhenIdDoesNotExists() throws Exception {
+    String nonExistingId = "NON-EXISTING-ID";
+    mockMvc.perform(delete("/movie/" + nonExistingId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Movie with id " + nonExistingId + " is not found."))
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(jsonPath("$.path").value("/movie/" + nonExistingId));
   }
 
   @Test

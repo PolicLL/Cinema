@@ -3,15 +3,19 @@ package com.example.cinema.integration;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.cinema.dto.actor.ActorRequest;
 import com.example.cinema.dto.actor.ActorResponse;
+import com.example.cinema.dto.movie.MovieRequest;
+import com.example.cinema.dto.movie.MovieResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -48,11 +52,47 @@ class ActorIntegrationTest {
   void getActorById() throws Exception {
     ActorRequest actorRequest = new ActorRequest("DESCRIPTION", List.of());
 
-    String userJsonRequest = objectMapper.writeValueAsString(actorRequest);
+    String actorJsonRequest = objectMapper.writeValueAsString(actorRequest);
 
     String actorResponseString = mockMvc.perform(post("/actor")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(userJsonRequest))
+            .content(actorJsonRequest))
+        .andExpect(status().isCreated())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn().getResponse().getContentAsString();
+
+    ActorResponse actorResponse = objectMapper.readValue(actorResponseString, ActorResponse.class);
+
+    String retrievedActorJson = mockMvc.perform(get("/actor/" + actorResponse.id())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andReturn().getResponse().getContentAsString();
+
+    ActorResponse finalActor = objectMapper.readValue(retrievedActorJson, ActorResponse.class);
+
+    assertThat(actorResponse).isEqualTo(finalActor);
+  }
+
+  @Test
+  void createActorWithMovie() throws Exception {
+    MovieRequest request = new MovieRequest("Movie", List.of());
+    String jsonForMovieCreation = objectMapper.writeValueAsString(request);
+
+    String createdMovieString = mockMvc.perform(post("/movie")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonForMovieCreation))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+
+    MovieResponse movieResponse = objectMapper.readValue(createdMovieString, MovieResponse.class);
+
+    ActorRequest actorRequest = new ActorRequest("DESCRIPTION", List.of(movieResponse.id()));
+
+
+    String actorResponseString = mockMvc.perform(post("/actor")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(actorRequest)))
         .andExpect(status().isCreated())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andReturn().getResponse().getContentAsString();
@@ -67,7 +107,7 @@ class ActorIntegrationTest {
 
     ActorResponse finalActor = objectMapper.readValue(retrievedUserJson, ActorResponse.class);
 
-    assertThat(actorResponse).isEqualTo(finalActor);
+    assertThat(finalActor.movieSummaries().get(0).id()).isEqualTo(movieResponse.id());
   }
 
   @Test
@@ -114,6 +154,17 @@ class ActorIntegrationTest {
 
     mockMvc.perform(get("/actor/" + created.id()))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldFailToDeleteMovieWhenIdDoesNotExists() throws Exception {
+    String nonExistingId = "NON-EXISTING-ID";
+    mockMvc.perform(delete("/actor/" + nonExistingId)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Actor with id " + nonExistingId + " is not found."))
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(jsonPath("$.path").value("/actor/" + nonExistingId));
   }
 
   @Test

@@ -7,14 +7,12 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Movie {
 
   @Id
@@ -29,11 +27,4 @@ public class Movie {
       inverseJoinColumns = @JoinColumn(name = "actor_id")
   )
   private List<Actor> actors = new ArrayList<>();
-
-  @Override
-  public String toString() {
-    return "Movie{" +
-        "name='" + name + '\'' +
-        '}';
-  }
 }

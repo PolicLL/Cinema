@@ -3,7 +3,6 @@ package com.example.cinema.mapper;
 import com.example.cinema.dto.actor.ActorSummary;
 import com.example.cinema.dto.movie.MovieRequest;
 import com.example.cinema.dto.movie.MovieResponse;
-import com.example.cinema.dto.movie.MovieSummary;
 import com.example.cinema.model.Actor;
 import com.example.cinema.model.Movie;
 import java.util.List;
@@ -30,8 +29,4 @@ public interface MovieMapper {
 
   @IterableMapping(qualifiedByName = "toActorSummary")
   List<ActorSummary> toActorSummaries(List<Actor> actors);
-
-  default MovieSummary toMovieSummary(Movie movie) {
-    return new MovieSummary(movie.getId(), movie.getName());
-  }
 }
