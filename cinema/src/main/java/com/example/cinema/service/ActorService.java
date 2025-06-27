@@ -58,7 +58,7 @@ public class ActorService {
     Actor actor = actorMapper.toEntity(dto);
     actor.setId(UUID.randomUUID().toString());
 
-    Actor savedActor = actorRepository.save(actor); // Save first
+    Actor savedActor = actorRepository.save(actor);
 
     List<Movie> movies = movieRepository.findAllById(dto.movieIds());
     savedActor.setMovies(movies);

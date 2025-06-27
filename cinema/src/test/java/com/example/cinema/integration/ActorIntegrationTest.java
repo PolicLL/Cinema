@@ -2,6 +2,7 @@ package com.example.cinema.integration;
 
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -131,6 +132,6 @@ class ActorIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(content().string(org.hamcrest.Matchers.containsString(uniqueDescription)));
+        .andExpect(content().string(containsString(uniqueDescription)));
   }
 }
