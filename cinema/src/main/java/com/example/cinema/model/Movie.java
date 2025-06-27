@@ -29,4 +29,11 @@ public class Movie {
       inverseJoinColumns = @JoinColumn(name = "actor_id")
   )
   private List<Actor> actors = new ArrayList<>();
+
+  @Override
+  public String toString() {
+    return "Movie{" +
+        "name='" + name + '\'' +
+        '}';
+  }
 }

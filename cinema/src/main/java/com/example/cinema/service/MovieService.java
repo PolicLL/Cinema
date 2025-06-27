@@ -80,7 +80,7 @@ public class MovieService {
 
   public void delete(String id) {
     log.info("Deleting movie with id: {}", id);
-    if (movieRepository.existsById(id))
+    if (!movieRepository.existsById(id))
       throw new MovieNotFoundException(id);
 
     movieRepository.deleteById(id);

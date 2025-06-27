@@ -85,7 +85,7 @@ public class ActorService {
 
   public void delete(String id) {
     log.info("Deleting actor with id: {}", id);
-    if (actorRepository.existsById(id))
+    if (!actorRepository.existsById(id))
       throw new ActorNotFoundException(id);
 
     actorRepository.deleteById(id);

@@ -45,22 +45,22 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(ActorNotFoundException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
   public ErrorResponse handleActorNotFoundException(ActorNotFoundException ex, HttpServletRequest request) {
     return ErrorResponse.builder()
         .timestamp(LocalDateTime.now())
-        .status(HttpStatus.BAD_REQUEST.value())
+        .status(HttpStatus.NOT_FOUND.value())
         .message(ex.getMessage())
         .path(request.getRequestURI())
         .build();
   }
 
   @ExceptionHandler(MovieNotFoundException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
   public ErrorResponse handleMovieNotFoundException(MovieNotFoundException ex, HttpServletRequest request) {
     return ErrorResponse.builder()
         .timestamp(LocalDateTime.now())
-        .status(HttpStatus.BAD_REQUEST.value())
+        .status(HttpStatus.NOT_FOUND.value())
         .message(ex.getMessage())
         .path(request.getRequestURI())
         .build();
